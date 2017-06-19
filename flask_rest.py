@@ -2,9 +2,12 @@
 
 import sys
 import os
+import json
 from flask import Flask, request
 from flask_restful import abort, Api, Resource
 import sqlobject as sq
+
+from model import *
 
 app = Flask(__name__)
 api = Api(app)
@@ -14,38 +17,10 @@ SERVER_HOST = 'localhost'
 SERVER_PORT = 8001
 
 
-class Cars(sq.SQLObject):
-    brand = sq.StringCol()
-    model = sq.StringCol()
-    number = sq.StringCol()
-    owner = sq.ForeignKey('Owners')
-
-class Owners(sq.SQLObject):
-    first_name = sq.StringCol()
-    last_name = sq.StringCol()
-    pesel = sq.StringCol(length=14)
-    cars = sq.MultipleJoin('Cars')
-
-def open_db(db_filename):
-    create = False
-    if not os.path.exists(db_filename):
-        create = True
-    conn = sq.sqlite.builder()(db_filename)
-    sq.sqlhub.processConnection = conn
-    if create:
-        Cars.createTable()
-        Owners.createTable()
-
 class Car(Resource):
     def get(self, car_id):
-        # list cars
-        print(car_id)
-        if car_id is None:
-            collection = {}
-            results = Cars.select()
-            for car in results:
-                collection[car.id] = car.brand + " " + car.model
-            return collection
+        car = Cars.get(car_id)
+        return car.sqlmeta.asDict()
 
     def delete(self):
         # delete a car
@@ -63,38 +38,64 @@ class Car(Resource):
 class CarList(Resource):
     def get(self):
         # list cars
-        collection = {}
+        cars = []
         results = Cars.select()
         for car in results:
-            collection[car.id] = car.brand + " " + car.model
-        return collection
+            cars.append(car.sqlmeta.asDict())
+        return cars
+
+    def post(self):
+        #add car
+        pass
+
+
+class Owner(Resource):
+    def get(self, owner_id):
+        owner = Owners.get(owner_id)
+        return owner.sqlmeta.asDict()
+
+    def delete(self):
+        # delete a owner
+        pass
+
+    def post(self):
+        # add a owner
+        pass
+
+    def put(self):
+        #update a owner
+        pass
 
 
 class OwnerList(Resource):
     def get(self):
         # list owners
-        pass
-
-    def delete(self):
-        # delete owner
-        pass
+        owners = []
+        results = Owners.select()
+        for owner in results:
+            owners.append(owner.sqlmeta.asDict())
+        return owners
 
     def post(self):
         #add owner
         pass
 
-    def put(self):
-        # update owner
-        pass
+
+class CarOwnerList(Resource):
+    def get(self):
+        # list owners
+        owners = []
+        results = Owners.select()
+        for owner in results:
+            owners.append(owner.sqlmeta.asDict())
+        return owners
 
 
+api.add_resource(CarOwnerList, '/')
 api.add_resource(CarList, '/cars')
 api.add_resource(Car, '/cars/<int:car_id>')
 api.add_resource(OwnerList, '/owners')
-# TODO
-# add resource in root to display cars with their owners
-
-
+api.add_resource(Owner, '/owners/<int:owner_id>')
 
 
 def main():
