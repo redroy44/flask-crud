@@ -19,12 +19,19 @@ SERVER_PORT = 8001
 
 class Car(Resource):
     def get(self, car_id):
-        car = Cars.get(car_id)
+        try:
+            car = Cars.get(car_id)
+        except sq.main.SQLObjectNotFound:
+            return '404 Not Found', 404
         return car.sqlmeta.asDict()
 
-    def delete(self):
+    def delete(self, car_id):
         # delete a car
-        pass
+        try:
+            Cars.delete(car_id)
+        except sq.main.SQLObjectNotFound:
+            return '404 Not Found', 404
+        return "<p>Deleted car: {}</p>".format(car_id), 204
 
     def post(self):
         # add a car
@@ -51,16 +58,19 @@ class CarList(Resource):
 
 class Owner(Resource):
     def get(self, owner_id):
-        owner = Owners.get(owner_id)
+        try:
+            owner = Owners.get(owner_id)
+        except sq.main.SQLObjectNotFound:
+            return '404 Not Found', 404
         return owner.sqlmeta.asDict()
 
-    def delete(self):
+    def delete(self, owner_id):
         # delete a owner
-        pass
-
-    def post(self):
-        # add a owner
-        pass
+        try:
+            Owners.delete(owner_id)
+        except sq.main.SQLObjectNotFound:
+            return '404 Not Found', 404
+        return "<p>Deleted owner: {}</p>".format(owner_id), 204
 
     def put(self):
         #update a owner
